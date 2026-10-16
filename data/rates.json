@@ -1,0 +1,10 @@
+{
+  "source": "Maharashtra Labour Commissioner, construction, Jan-Jun 2026 (replace with Jul-Dec 2026 notification)",
+  "source_url": "https://wageindicator.org/en-in/ai/work-in-india/minimum-wage/18640-maharashtra/18719-construction-of-roads-and-buildings/",
+  "days_per_month": 26,
+  "construction": {
+    "I":   {"unskilled": 22094, "semi_skilled": 23174, "skilled": 24689},
+    "II":  {"unskilled": 21229, "semi_skilled": 22304, "skilled": 23819},
+    "III": {"unskilled": 20359, "semi_skilled": 21439, "skilled": 22954}
+  }
+}
