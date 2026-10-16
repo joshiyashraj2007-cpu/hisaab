@@ -4,9 +4,12 @@ import json
 from datetime import datetime
 
 GENESIS = "0" * 64
-FIELDS = ["worker_id", "work_date", "start_time", "end_time", "hours", "site",
-          "contractor", "amount_paid", "transcript", "audio_sha256", "created_at"]
-NUMS = {"hours", "amount_paid"}
+FIELDS = ["worker_id", "kind", "work_date", "start_time", "end_time", "hours", "site",
+          "contractor", "amount_paid", "transcript", "audio_sha256",
+          "at_time", "lat", "lng", "gps_acc", "face_sha256", "site_sha256",
+          "checkin_id", "checkout_id", "said_start", "said_end", "time_check", "created_at"]
+NUMS = {"hours", "amount_paid", "lat", "lng", "gps_acc"}
+INTS = {"worker_id", "checkin_id", "checkout_id"}
 
 
 def canon(e):
@@ -16,7 +19,7 @@ def canon(e):
         v = e.get(k)
         if k in NUMS and v is not None:
             v = float(v)
-        if k == "worker_id" and v is not None:
+        if k in INTS and v is not None:
             v = int(v)
         d[k] = v
     return json.dumps(d, sort_keys=True, ensure_ascii=False)
@@ -39,7 +42,7 @@ def seal(con, e):
     prev = head(con, e["worker_id"])
     e["prev_hash"] = prev
     e["entry_hash"] = entry_hash(e, prev)
-    cols = FIELDS + ["audio_file", "prev_hash", "entry_hash"]
+    cols = FIELDS + ["audio_file", "face_photo", "site_photo", "prev_hash", "entry_hash"]
     cur = con.execute(
         f"INSERT INTO entries({','.join(cols)}) VALUES({','.join('?' * len(cols))})",
         [e.get(c) for c in cols])

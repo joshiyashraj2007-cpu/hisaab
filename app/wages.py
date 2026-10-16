@@ -20,6 +20,37 @@ def hours_between(start, end):
     return round(mins / 60, 2)
 
 
+TOLERANCE_MIN = 30    # spoken time may differ from the check-in clock by this much
+
+
+def minutes(hhmm):
+    h, m = map(int, hhmm.split(":"))
+    return h * 60 + m
+
+
+def compare_times(said_start, said_end, clock_start, clock_end):
+    """Plain code, no AI: does what the worker SAID match the check-in / check-out CLOCK?
+    'match', 'mismatch' (a gentle warning, never an accusation) or 'not-said'."""
+    pairs = [(s, c) for s, c in ((said_start, clock_start), (said_end, clock_end)) if s and c]
+    if not pairs:
+        return "not-said"
+    off = max(min(abs(minutes(s) - minutes(c)), 1440 - abs(minutes(s) - minutes(c))) for s, c in pairs)
+    return "match" if off <= TOLERANCE_MIN else "mismatch"
+
+
+def check_said(said_start, said_end, said_hours, clock_start, clock_end, clock_seconds):
+    """Everything the worker said about his time, against the check-in clock. Plain code, no AI."""
+    results = []
+    t = compare_times(said_start, said_end, clock_start, clock_end)
+    if t != "not-said":
+        results.append(t)
+    if said_hours is not None and clock_seconds is not None:      # "I worked 1 hour" vs the real length
+        results.append("match" if abs(said_hours * 3600 - clock_seconds) <= TOLERANCE_MIN * 60 else "mismatch")
+    if not results:
+        return "not-said"
+    return "mismatch" if "mismatch" in results else "match"
+
+
 def day_rate(zone, skill, agreed):
     monthly = RATES["construction"][zone][skill]
     return round(max(monthly / RATES["days_per_month"], agreed or 0), 2)

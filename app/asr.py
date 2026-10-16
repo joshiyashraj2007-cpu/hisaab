@@ -10,10 +10,22 @@ ENGINE = os.environ.get("ASR_ENGINE", "whisper")
 _model = None
 
 WHISPER_HINTS = {
-    "hi": "मजदूरी, ठेकेदार, साइट, घंटे, रुपये, सुबह, शाम, आज, कल",
-    "mr": "मजुरी, ठेकेदार, साइट, तास, रुपये, सकाळी, संध्याकाळी, आज, काल",
     "hi": "मजदूरी, ठेकेदार, साइट, घंटे, रुपये, सुबह, शाम, आज, कल, आठ बजे, सात बजे, नौ बजे, छह बजे, दस बजे",
+    "mr": "मजुरी, ठेकेदार, साइट, तास, रुपये, सकाळी, संध्याकाळी, आज, काल",
+    "en": "Today I worked at the site from 8 am to 6 pm, the contractor paid me 450 rupees.",
 }
+
+
+def pick_language(audio, lang):
+    """Whisper guesses the language; we only choose between the worker's language and English.
+    Whisper often hears Hindi as Urdu, so all Indic guesses count for the worker's language."""
+    try:
+        _, _, probs = _model.detect_language(audio)
+    except Exception:
+        return lang
+    p = dict(probs)
+    native = sum(p.get(c, 0) for c in ("hi", "mr", "ur", "ne", "pa", "gu"))
+    return "en" if p.get("en", 0) > native else lang
 
 
 def load():
@@ -49,15 +61,18 @@ def read_wav(path):
 
 
 def transcribe(wav_path, lang="hi"):
+    """Returns (text, language heard)."""
     if ENGINE == "stub":
         return os.environ.get("STUB_TEXT",
                               "aaj subah aath baje se shaam saat baje tak garkheda site pe kaam kiya, "
-                              "sharma thekedar ne chaar sau pachaas rupaye diye")
+                              "sharma thekedar ne chaar sau pachaas rupaye diye"), lang
     if ENGINE == "indic":
         import torch
         wav = torch.from_numpy(read_wav(wav_path)).unsqueeze(0)
         with torch.no_grad():
-            return str(_model(wav, lang, "ctc")).strip()
-    segs, _ = _model.transcribe(read_wav(wav_path), language=lang, initial_prompt=WHISPER_HINTS.get(lang),
-                                vad_filter=True)
-    return " ".join(s.text.strip() for s in segs)
+            return str(_model(wav, lang, "ctc")).strip(), lang
+    audio = read_wav(wav_path)
+    heard = pick_language(audio, lang)
+    segs, _ = _model.transcribe(audio, language=heard, initial_prompt=WHISPER_HINTS.get(heard),
+                                vad_filter=True, beam_size=5)
+    return " ".join(s.text.strip() for s in segs), heard

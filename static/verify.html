@@ -21,6 +21,10 @@
 </main>
 <script>
 const w = new URLSearchParams(location.search).get("w") || 1;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const what = e => e.kind === "checkin" ? `Check-in ${esc((e.at_time || "").slice(11, 16))}${e.face_sha256 ? " · 📷" : ""}`
+  : e.kind === "checkout" ? `Check-out ${esc((e.at_time || "").slice(11, 16))}${e.face_sha256 ? " · 📷" : ""}`
+  : `${e.hours ?? "?"} h · paid ₹${e.amount_paid ?? "?"}`;
 (async () => {
   const [v, d] = await Promise.all([fetch(`/api/workers/${w}/verify`).then(r => r.json()),
                                     fetch(`/api/workers/${w}/entries`).then(r => r.json())]);
@@ -32,16 +36,16 @@ const w = new URLSearchParams(location.search).get("w") || 1;
       <p class="hash">Latest seal: ${v.head}</p>`;
   } else {
     box.className = "card verdict bad";
-    const what = v.broken_at ? `Entry #${v.broken_at} (${v.work_date}) was changed after it was sealed.`
-                             : `Recording(s) for entry #${v.audio_altered.join(", #")} were changed.`;
-    box.innerHTML = `<div class="icon">✖</div><h2>Record altered</h2><p>${what}</p>
+    const why = v.broken_at ? `Entry #${v.broken_at} (${esc(v.work_date)}) was changed after it was sealed.`
+                            : `The recording or photo for entry #${v.audio_altered.join(", #")} was changed.`;
+    box.innerHTML = `<div class="icon">✖</div><h2>Record altered</h2><p>${why}</p>
       <p class="muted">To hide this, every seal after it would have to be rewritten, and any seal already shared would expose it.</p>`;
   }
   document.getElementById("list").innerHTML = d.entries.map(e => {
     const broken = (v.broken_at && e.id >= v.broken_at) || (v.audio_altered || []).includes(e.id);
-    return `<div class="day ${broken ? "broken" : ""}"><span class="d">#${e.id} ${e.work_date}</span>
-      <span class="m">${e.hours ?? "?"} h · paid ₹${e.amount_paid ?? "?"}</span>
-      <span class="h">${broken ? "✖" : "🔒"} ${e.entry_hash.slice(0, 10)}</span></div>`;
+    return `<div class="day ${broken ? "broken" : ""}"><span class="d">#${e.id} ${esc(e.work_date)}</span>
+      <span class="m">${what(e)}</span>
+      <span class="h">${broken ? "✖" : "🔒"} ${esc(e.entry_hash.slice(0, 10))}</span></div>`;
   }).join("");
 })();
 </script>

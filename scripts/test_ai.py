@@ -16,7 +16,7 @@ if len(sys.argv) > 1:                        # also test speech on a real clip
     t = time.time()
     asr.load()
     asr.to_wav(sys.argv[1], "audio/test.wav")
-    text = asr.transcribe("audio/test.wav", "hi")
+    text, _ = asr.transcribe("audio/test.wav", "hi")
     print(f"speech ({asr.ENGINE}) {time.time() - t:.1f}s ->", text)
 
 t = time.time()

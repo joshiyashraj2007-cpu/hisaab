@@ -30,6 +30,13 @@
     <div class="row"><button id="rSave" class="primary">Save worker</button></div>
   </section>
 
+  <section id="shift" class="card shiftcard">
+    <p id="shiftState" class="muted" style="text-align:center"></p>
+    <p id="shiftTimer" class="timer"></p>
+    <button id="shiftBtn" class="bigbtn start">काम शुरू करें<small>Start work</small></button>
+    <p id="gps" class="muted" style="text-align:center;margin-top:8px"></p>
+  </section>
+
   <section id="record" class="card">
     <button id="micBtn" class="mic" aria-label="Record">
       <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
@@ -45,6 +52,7 @@
   <section id="draft" class="card hidden">
     <h2>Check this / जाँच लें</h2>
     <p id="transcript" class="quote"></p>
+    <p id="check" class="check"></p>
     <div class="grid">
       <label>Date<input id="fDate" type="date"></label>
       <label>Paid (₹)<input id="fPaid" type="number"></label>
@@ -82,7 +90,22 @@
   <a id="verifyLink" href="#">Verify</a>
   <a id="exportLink" href="#">Export</a>
   <button id="addWorker">+ Worker</button>
+  <button id="linkPhone">Link phone</button>
 </nav>
+
+<div id="cam" class="overlay hidden">
+  <p id="camLabel" class="overlaylabel"></p>
+  <video id="camVideo" autoplay playsinline muted></video>
+  <button id="camShot" class="shutter" aria-label="Take photo"></button>
+  <button id="camCancel" class="ghost">Cancel</button>
+</div>
+
+<div id="pairBox" class="overlay hidden">
+  <p class="overlaylabel">फ़ोन से स्कैन करें · Scan with the worker's phone</p>
+  <img id="pairQr" alt="Link phone QR" width="220" height="220">
+  <p id="pairUrl" class="overlaynote"></p>
+  <button id="pairClose" class="ghost">Close</button>
+</div>
 <script src="app.js"></script>
 </body>
 </html>

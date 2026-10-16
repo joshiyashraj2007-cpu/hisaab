@@ -1,5 +1,5 @@
 // Keeps the app shell on the phone. API calls and audio always go to the laptop.
-const CACHE = "hisaab-v1";
+const CACHE = "hisaab-v2";
 const SHELL = ["/", "/index.html", "/style.css", "/app.js", "/verify.html", "/claim.html",
                "/manifest.json", "/icon-192.png", "/icon-512.png"];
 

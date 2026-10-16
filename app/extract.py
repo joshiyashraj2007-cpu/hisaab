@@ -15,6 +15,7 @@ class Draft(BaseModel):
     site: Optional[str] = None
     contractor: Optional[str] = None
     amount_paid: Optional[float] = None
+    duration_hours: Optional[float] = None   # how long he SAYS he worked, only if said
     missing: List[str] = []
 
 
@@ -24,7 +25,13 @@ Today's date is {today}. "aaj" = today. "kal" / "kaal" here means YESTERDAY (he 
 Use 24-hour HH:MM. Hours: ek 1, do 2, teen 3, chaar 4, paanch 5, chhe/chheh/chah 6, saat 7, aath 8, nau 9,
 das 10, gyaarah 11, baarah 12 (Marathi saha 6). subah/sakaali = morning; dopahar, shaam, raat = add 12:
 "subah saat" = 07:00, "subah nau" = 09:00, "dopahar do" = 14:00, "shaam chhe" = 18:00, "shaam saat" = 19:00.
-Minutes change ONLY when the word is said: "saade aath" = 08:30, "sava nau" = 09:15, "paune chhe" = 05:45, "dedh" = 1:30, "dhai" = 2:30.
+Minutes change ONLY when the word is said: "saade aath" = 08:30, "sava nau" = 09:15, "paune" = 15 minutes BEFORE the
+hour ("paune aath" = 07:45, "paune chhe" = 05:45, or 17:45 in the evening), "dedh" = 1:30, "dhai" = 2:30.
+If no day is said, work_date = today ({today}).
+duration_hours = how long he says he worked, ONLY if he says a length: "ek ghanta" / "1 hour" = 1, "aadha ghanta" = 0.5,
+"das ghante" = 10, "30 minute" = 0.5, "30 second" = 0.008. Otherwise null; never compute it from start and end.
+English: "8 am" = 08:00, "6 pm" = 18:00, "half past 8" = 08:30, "quarter to 6" = 05:45. An end hour smaller
+than the start hour is in the evening: "9 se 5" = 09:00 to 17:00. Names of sites and contractors: copy as said.
 Money words: "sau" = 100, "chaar sau pachaas" = 450, "paanch sau" = 500, "hazaar" = 1000.
 If the note says nothing was paid ("kuch nahi mila", "paise nahi diye"), amount_paid = 0.
 If a field is not said, use null and add the field name to "missing". Never guess a number.
@@ -38,6 +45,10 @@ Note: "आज सकाळी आठ ते संध्याकाळी स�
 JSON: {{"work_date":"{today}","start_time":"08:00","end_time":"18:00","site":"Waluj","contractor":null,"amount_paid":500,"missing":["contractor"]}}
 Note: "today 8 to 6 work kiya Chikalthana site, Patil contractor, 600 diye"
 JSON: {{"work_date":"{today}","start_time":"08:00","end_time":"18:00","site":"Chikalthana","contractor":"Patil","amount_paid":600,"missing":[]}}
+Note: "aaj maine ek ghanta kaam kiya, paise nahi mile"
+JSON: {{"work_date":"{today}","start_time":null,"end_time":null,"site":null,"contractor":null,"amount_paid":0,"duration_hours":1,"missing":["start_time","end_time","site","contractor"]}}
+Note: "Yesterday I worked from 9 in the morning till 5 in the evening at Waluj, they gave me 500"
+JSON: {{"work_date":"{yesterday}","start_time":"09:00","end_time":"17:00","site":"Waluj","contractor":null,"amount_paid":500,"missing":["contractor"]}}
 """
 
 SYSTEM_9B = """Extract one workday from a construction worker's informal voice note (Hindi, Marathi or Hinglish;

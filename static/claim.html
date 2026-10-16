@@ -15,8 +15,10 @@
   .totals b{display:block;font-size:22px;color:var(--indigo)}
   .totals .short b{color:var(--brick)}
   .letter{white-space:pre-wrap;background:var(--mist);border-radius:12px;padding:14px;font-family:Georgia,serif}
-  .badge{display:inline-block;background:#E8F3EC;color:var(--seal);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600}
+  .badge{display:inline-block;background:#E8F3EC;color:var(--seal);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600;margin:2px 0}
   .foot{display:flex;gap:16px;align-items:center;margin-top:16px}
+  .tablewrap{overflow-x:auto}
+  @media (max-width:600px){.totals{grid-template-columns:repeat(2,1fr)}}
   @media print{.noprint{display:none}main{padding:0}.card{box-shadow:none;padding:0}}
 </style>
 </head>
@@ -29,30 +31,35 @@
 <script>
 const w = new URLSearchParams(location.search).get("w") || 1;
 const R = n => "₹" + Number(n).toLocaleString("en-IN");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const proof = e => !e.checkin_id ? "voice only"
+  : "✓ clock" + (e.photo ? " · photo" : "") + (e.gps ? " · GPS" : "")
+    + (e.time_check === "mismatch" ? " · ⚠ said " + esc(e.said_start || "?") + "–" + esc(e.said_end || "?") : "");
 fetch(`/api/workers/${w}/claim`).then(r => r.json()).then(c => {
-  const rows = c.rows.map(e => `<tr><td>${e.work_date}</td><td>${e.start_time || "?"}–${e.end_time || "?"}</td>
+  const rows = c.rows.map(e => `<tr><td>${esc(e.work_date)}</td><td>${esc(e.start_time) || "?"}–${esc(e.end_time) || "?"}</td>
     <td class="n">${e.hours ?? "?"}</td><td class="n">${R(e.due)}</td><td class="n">${R(e.amount_paid || 0)}</td>
-    <td class="n">${R(e.short)}</td><td class="h">${e.entry_hash.slice(0, 12)}</td></tr>`).join("");
+    <td class="n">${R(e.short)}</td><td>${proof(e)}</td><td class="h">${esc(e.entry_hash.slice(0, 12))}</td></tr>`).join("");
   document.getElementById("doc").innerHTML = `
     <h1>Wage claim · Code on Wages, 2019, Section 45</h1>
-    <p class="muted">Worker: <b>${c.worker.name}</b> · Zone ${c.worker.zone} · ${c.worker.skill.replace("_", "-")} ·
-       Contractor: ${c.contractor || "—"} · Site: ${c.site || "—"} · ${c.period_from} to ${c.period_to}</p>
+    <p class="muted">Worker: <b>${esc(c.worker.name)}</b> · Zone ${esc(c.worker.zone)} · ${esc(c.worker.skill.replace("_", "-"))} ·
+       Contractor: ${esc(c.contractor) || "—"} · Site: ${esc(c.site) || "—"} · ${esc(c.period_from)} to ${esc(c.period_to)}</p>
     <div class="totals">
       <div>Days recorded<b>${c.days}</b></div><div>Due at minimum rate<b>${R(c.due)}</b></div>
       <div>Paid<b>${R(c.paid)}</b></div><div class="short">Shortfall<b>${R(c.shortfall)}</b></div>
     </div>
-    <p class="muted">Minimum daily rate applied: ${R(c.day_rate)} (${c.rates_source}). Overtime beyond 8 h at 2×, included: ${R(c.overtime_due)}.
-       <b>File before ${c.file_before || "—"}</b> (3 years, §45(6)).</p>
+    <p class="muted">Minimum daily rate applied: ${R(c.day_rate)} (${esc(c.rates_source)}). Overtime beyond 8 h at 2×, included: ${R(c.overtime_due)}.
+       <b>File before ${esc(c.file_before) || "—"}</b> (3 years, §45(6)).</p>
     <h2>Letter</h2>
-    <div class="letter">${c.letter}</div>
-    <p><span class="badge">✔ Every ₹ figure checked by code${c.letter_by === "template" ? " (standard template)" : ""}</span>
+    <div class="letter">${esc(c.letter)}</div>
+    <p><span class="badge">✔ Letter and every ₹ figure written by code, not AI</span>
+       <span class="badge">✔ ${c.verified_days} of ${c.days} days have a check-in and check-out on the laptop clock${c.photo_days ? ", " + c.photo_days + " with photos" : ""}</span>
        <span class="badge">${c.chain.ok ? "✔ All " + c.chain.count + " seals intact" : "✖ Record altered"}</span></p>
     <h2>Day-by-day record</h2>
-    <table><tr><th>Date</th><th>Time</th><th class="n">Hours</th><th class="n">Due</th><th class="n">Paid</th><th class="n">Short</th><th>Seal</th></tr>${rows}</table>
+    <div class="tablewrap"><table><tr><th>Date</th><th>Time (clock)</th><th class="n">Hours</th><th class="n">Due</th><th class="n">Paid</th><th class="n">Short</th><th>Proof</th><th>Seal</th></tr>${rows}</table></div>
     <div class="foot">
       <img src="data:image/png;base64,${c.qr_png}" width="120" height="120" alt="Verify QR">
-      <div><p class="hash">Latest seal (SHA-256): ${c.head}</p>
-        <p class="muted">Scan to verify on the Hisaab device: ${c.verify_url}</p>
+      <div><p class="hash">Latest seal (SHA-256): ${esc(c.head)}</p>
+        <p class="muted">Scan to verify on the Hisaab device: ${esc(c.verify_url)}</p>
         <p class="muted">Free legal aid: NALSA helpline <b>15100</b>.</p></div>
     </div>`;
 }).catch(() => document.getElementById("doc").innerHTML = "<p>Could not build the claim. Are there any entries?</p>");
