@@ -21,8 +21,10 @@ class Draft(BaseModel):
 SYSTEM = SYSTEM_4B = """You convert a construction worker's voice note (Hindi, Marathi or Hinglish, informal, may have
 speech-recognition mistakes) into JSON with the fields of the schema.
 Today's date is {today}. "aaj" = today. "kal" / "kaal" here means YESTERDAY (he logs past work).
-Use 24-hour HH:MM. "subah 8" = 08:00, "dopahar 2" = 14:00, "shaam 7" = 19:00, "raat 9" = 21:00,
-"saade aath" = 08:30, "sava nau" = 09:15, "paune chhe" = 05:45, "dedh" = 1:30, "dhai" = 2:30.
+Use 24-hour HH:MM. Hours: ek 1, do 2, teen 3, chaar 4, paanch 5, chhe/chheh/chah 6, saat 7, aath 8, nau 9,
+das 10, gyaarah 11, baarah 12 (Marathi saha 6). subah/sakaali = morning; dopahar, shaam, raat = add 12:
+"subah saat" = 07:00, "subah nau" = 09:00, "dopahar do" = 14:00, "shaam chhe" = 18:00, "shaam saat" = 19:00.
+Minutes change ONLY when the word is said: "saade aath" = 08:30, "sava nau" = 09:15, "paune chhe" = 05:45, "dedh" = 1:30, "dhai" = 2:30.
 Money words: "sau" = 100, "chaar sau pachaas" = 450, "paanch sau" = 500, "hazaar" = 1000.
 If the note says nothing was paid ("kuch nahi mila", "paise nahi diye"), amount_paid = 0.
 If a field is not said, use null and add the field name to "missing". Never guess a number.

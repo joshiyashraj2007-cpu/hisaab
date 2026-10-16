@@ -238,5 +238,13 @@ def claim(wid: int, request: Request):
     c["worker"] = w
     return c
 
+
+@app.get("/api/workers/{wid}/export")
+def export(wid: int):
+    w = get_worker(wid)
+    body = {"worker": w, "entries": worker_entries(wid), "hash": "sha256", "fields": chain.FIELDS}
+    return JSONResponse(body, headers={"Content-Disposition": f'attachment; filename="hisaab_worker_{wid}.json"'})
+
+
 app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

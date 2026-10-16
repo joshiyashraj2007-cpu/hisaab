@@ -11,56 +11,43 @@
 </head>
 <body>
 <header class="top">
-<img src="logo.png" alt="" class="logo" onerror="this.remove()">
-<div><h1>Hisaab<span class="deva">हसाब</span></h1><p id="who" 
-class="muted">Select or add a worker</p></div>
-<select id="workerSel" aria-label="Worker"></select>
+  <img src="logo.png" alt="" class="logo" onerror="this.remove()">
+  <div><h1>Hisaab<span class="deva">हिसाब</span></h1><p id="who" class="muted">Select or add a worker</p></div>
+  <select id="workerSel" aria-label="Worker"></select>
 </header>
-Page 29 of 58
+
 <main>
   <section id="register" class="card hidden">
-    <h2>New worker / नया मज़दूर</h2>
+    <h2>New worker / नया मज़दूर</h2>
     <div class="grid">
       <label class="wide">Name<input id="rName"></label>
       <label>Phone<input id="rPhone" inputmode="tel"></label>
-      <label>Language<select id="rLang"><option value="hi">Hindi</option>
-<option value="mr">Marathi</option></select></label>
-      <label>Zone<select id="rZone"><option>I</option><option>II</option>
-<option>III</option></select></label>
-      <label>Skill<select id="rSkill"><option 
-value="unskilled">Unskilled</option><option value="semi_skilled">Semi
-skilled</option><option value="skilled">Skilled</option></select></label>
-      <label class="wide">Promised daily wage (₹)<input id="rRate" 
-type="number"></label>
+      <label>Language<select id="rLang"><option value="hi">Hindi</option><option value="mr">Marathi</option></select></label>
+      <label>Zone<select id="rZone"><option>I</option><option>II</option><option>III</option></select></label>
+      <label>Skill<select id="rSkill"><option value="unskilled">Unskilled</option><option value="semi_skilled">Semi-skilled</option><option value="skilled">Skilled</option></select></label>
+      <label class="wide">Promised daily wage (₹)<input id="rRate" type="number"></label>
     </div>
-    <div class="row"><button id="rSave" class="primary">Save worker</button>
-</div>
+    <div class="row"><button id="rSave" class="primary">Save worker</button></div>
   </section>
+
   <section id="record" class="card">
     <button id="micBtn" class="mic" aria-label="Record">
-      <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 
-0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 
-19 11h-2z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
     </button>
-    <p id="micLabel" class="big">दबाएं और बोल<small>Tap, speak about today's 
-work, tap again</small></p>
+    <p id="micLabel" class="big">दबाएं और बोलें<small>Tap, speak about today's work, tap again</small></p>
     <p id="timer"></p>
     <p id="status" class="muted" style="text-align:center"></p>
-    <details><summary>Upload a recording (phone)</summary><input type="file" 
-accept="audio/*" capture id="fileIn"></details>
-    <details><summary>Type instead</summary><textarea id="typed" 
-placeholder="aaj subah 8 se shaam 6 tak..."></textarea>
-      <div class="row"><button id="typedBtn" class="ghost">Make 
-draft</button></div></details>
+    <details><summary>Upload a recording (phone)</summary><input type="file" accept="audio/*" capture id="fileIn"></details>
+    <details><summary>Type instead</summary><textarea id="typed" placeholder="aaj subah 8 se shaam 6 tak..."></textarea>
+      <div class="row"><button id="typedBtn" class="ghost">Make draft</button></div></details>
   </section>
+
   <section id="draft" class="card hidden">
-    <h2>Check this / जाँच ल</h2>
+    <h2>Check this / जाँच लें</h2>
     <p id="transcript" class="quote"></p>
     <div class="grid">
       <label>Date<input id="fDate" type="date"></label>
       <label>Paid (₹)<input id="fPaid" type="number"></label>
-Hisaab Build Day Runbook, 16 Oct
-Page 30 of 58
       <label>Start<input id="fStart" type="time"></label>
       <label>End<input id="fEnd" type="time"></label>
       <label>Site<input id="fSite"></label>
@@ -68,29 +55,28 @@ Page 30 of 58
     </div>
     <p id="timing" class="muted"></p>
     <div class="row">
-      <button id="sealBtn" class="primary">सही है, सील कर · Seal</button>
+      <button id="sealBtn" class="primary">सही है, सील करें · Seal</button>
       <button id="cancelBtn" class="ghost">Cancel</button>
     </div>
   </section>
+
   <section id="sealed" class="card sealedcard hidden">
     <h2>Sealed / सील हो गया</h2>
     <p id="sealedText"></p>
     <p class="hash" id="sealedHash"></p>
     <div class="row">
-      <button id="speakBtn" class="ghost">
-🔊
- Hear it</button>
-      <a id="waLink" class="ghost" target="_blank" style="padding:12px 
-16px;border-radius:12px;text-decoration:none">Share seal (WhatsApp)</a>
-      <a id="smsLink" class="ghost" style="padding:12px 16px;border
-radius:12px;text-decoration:none">SMS</a>
+      <button id="speakBtn" class="ghost">🔊 Hear it</button>
+      <a id="waLink" class="ghost" target="_blank" style="padding:12px 16px;border-radius:12px;text-decoration:none">Share seal (WhatsApp)</a>
+      <a id="smsLink" class="ghost" style="padding:12px 16px;border-radius:12px;text-decoration:none">SMS</a>
     </div>
   </section>
+
   <section class="card">
     <h2>Diary / डायरी</h2>
     <div id="diaryList" class="muted">No entries yet.</div>
   </section>
 </main>
+
 <nav class="bottom">
   <a id="claimLink" href="#">Claim</a>
   <a id="verifyLink" href="#">Verify</a>

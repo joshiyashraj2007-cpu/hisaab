@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab · Verify</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .verdict{text-align:center;padding:28px 18px}
+  .verdict .icon{font-size:72px;line-height:1}
+  .ok{border:3px solid var(--seal)} .ok h2,.ok .icon{color:var(--seal)}
+  .bad{border:3px solid var(--brick)} .bad h2,.bad .icon{color:var(--brick)}
+  .day .d{width:170px}
+  .day.broken{background:var(--brickTint)}
+</style>
+</head>
+<body>
+<header class="top"><h1>Hisaab<span class="deva">हिसाब</span></h1><a href="/" class="muted" style="margin-left:auto">← App</a></header>
+<main>
+  <section id="verdict" class="card verdict"><p class="muted">Checking every seal…</p></section>
+  <section class="card"><h2>Entries</h2><div id="list"></div></section>
+</main>
+<script>
+const w = new URLSearchParams(location.search).get("w") || 1;
+(async () => {
+  const [v, d] = await Promise.all([fetch(`/api/workers/${w}/verify`).then(r => r.json()),
+                                    fetch(`/api/workers/${w}/entries`).then(r => r.json())]);
+  const box = document.getElementById("verdict");
+  if (v.ok) {
+    box.className = "card verdict ok";
+    box.innerHTML = `<div class="icon">✔</div><h2>All ${v.count} entries intact</h2>
+      <p class="muted">Every seal matches. Every recording matches its fingerprint.</p>
+      <p class="hash">Latest seal: ${v.head}</p>`;
+  } else {
+    box.className = "card verdict bad";
+    const what = v.broken_at ? `Entry #${v.broken_at} (${v.work_date}) was changed after it was sealed.`
+                             : `Recording(s) for entry #${v.audio_altered.join(", #")} were changed.`;
+    box.innerHTML = `<div class="icon">✖</div><h2>Record altered</h2><p>${what}</p>
+      <p class="muted">To hide this, every seal after it would have to be rewritten, and any seal already shared would expose it.</p>`;
+  }
+  document.getElementById("list").innerHTML = d.entries.map(e => {
+    const broken = (v.broken_at && e.id >= v.broken_at) || (v.audio_altered || []).includes(e.id);
+    return `<div class="day ${broken ? "broken" : ""}"><span class="d">#${e.id} ${e.work_date}</span>
+      <span class="m">${e.hours ?? "?"} h · paid ₹${e.amount_paid ?? "?"}</span>
+      <span class="h">${broken ? "✖" : "🔒"} ${e.entry_hash.slice(0, 10)}</span></div>`;
+  }).join("");
+})();
+</script>
+</body>
+</html>
