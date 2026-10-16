@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import asr, chain, db, extract, wages
+from .letter import write_letter
 
 AUDIO_DIR = "audio"
 os.makedirs(AUDIO_DIR, exist_ok=True)
@@ -201,6 +202,41 @@ def verify(wid: int):
     result["ok"] = result["ok"] and not audio_bad
     return result
 
+_letters = {}   # (worker id, latest seal) -> letter, so Qwen writes it only once
+
+
+@app.get("/api/workers/{wid}/claim")
+def claim(wid: int, request: Request):
+    w = get_worker(wid)
+    es = worker_entries(wid)
+    if not es:
+        raise HTTPException(400, "no entries yet")
+    rate = wages.day_rate(w["zone"], w["skill"], w["agreed_rate"])
+    c = wages.compute(es, rate)
+    c["contractor"] = Counter(e["contractor"] for e in es if e["contractor"]).most_common(1)[0][0] \
+        if any(e["contractor"] for e in es) else None
+    c["site"] = Counter(e["site"] for e in es if e["site"]).most_common(1)[0][0] \
+        if any(e["site"] for e in es) else None
+    dates = sorted(e["work_date"] for e in es)
+    c["period_from"], c["period_to"] = dates[0], dates[-1]
+    c["head"] = es[-1]["entry_hash"]
+    c["chain"] = chain.verify(es)
+
+    # Qwen writes the letter once per (worker, latest seal); reloads are instant.
+    key = (wid, c["head"])
+    if key not in _letters:
+        _letters[key] = write_letter(w, c, wages.RATES["source"])
+    c["letter"], c["letter_by"] = _letters[key]
+
+    port = request.url.port or 8000
+    c["verify_url"] = f"http://{lan_ip()}:{port}/verify.html?w={wid}"
+    c["qr_png"] = qr_png_b64(c["verify_url"])
+    c["rates_source"] = wages.RATES["source"]
+    c["rates_url"] = wages.RATES["source_url"]
+    c["rates_meta"] = {k: wages.RATES.get(k) for k in
+                       ("notification", "effective_from", "effective_to", "verified_for_period")}
+    c["worker"] = w
+    return c
 
 app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
