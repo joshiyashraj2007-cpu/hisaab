@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hisaab · Wage claim</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{background:#fff}
+  main{max-width:820px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+  td.n,th.n{text-align:right;font-family:"Courier New",monospace}
+  .totals{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+  .totals div{background:var(--mist);border-radius:12px;padding:10px}
+  .totals b{display:block;font-size:22px;color:var(--indigo)}
+  .totals .short b{color:var(--brick)}
+  .letter{white-space:pre-wrap;background:var(--mist);border-radius:12px;padding:14px;font-family:Georgia,serif}
+  .badge{display:inline-block;background:#E8F3EC;color:var(--seal);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600}
+  .foot{display:flex;gap:16px;align-items:center;margin-top:16px}
+  @media print{.noprint{display:none}main{padding:0}.card{box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<main>
+  <div class="row noprint"><a href="/" class="ghost" style="padding:10px 14px;border-radius:10px;text-decoration:none">← App</a>
+    <button class="primary" onclick="print()">Print / Save as PDF</button></div>
+  <section class="card" id="doc"><p class="muted">Calculating…</p></section>
+</main>
+<script>
+const w = new URLSearchParams(location.search).get("w") || 1;
+const R = n => "₹" + Number(n).toLocaleString("en-IN");
+fetch(`/api/workers/${w}/claim`).then(r => r.json()).then(c => {
+  const rows = c.rows.map(e => `<tr><td>${e.work_date}</td><td>${e.start_time || "?"}–${e.end_time || "?"}</td>
+    <td class="n">${e.hours ?? "?"}</td><td class="n">${R(e.due)}</td><td class="n">${R(e.amount_paid || 0)}</td>
+    <td class="n">${R(e.short)}</td><td class="h">${e.entry_hash.slice(0, 12)}</td></tr>`).join("");
+  document.getElementById("doc").innerHTML = `
+    <h1>Wage claim · Code on Wages, 2019, Section 45</h1>
+    <p class="muted">Worker: <b>${c.worker.name}</b> · Zone ${c.worker.zone} · ${c.worker.skill.replace("_", "-")} ·
+       Contractor: ${c.contractor || "—"} · Site: ${c.site || "—"} · ${c.period_from} to ${c.period_to}</p>
+    <div class="totals">
+      <div>Days recorded<b>${c.days}</b></div><div>Due at minimum rate<b>${R(c.due)}</b></div>
+      <div>Paid<b>${R(c.paid)}</b></div><div class="short">Shortfall<b>${R(c.shortfall)}</b></div>
+    </div>
+    <p class="muted">Minimum daily rate applied: ${R(c.day_rate)} (${c.rates_source}). Overtime beyond 8 h at 2×, included: ${R(c.overtime_due)}.
+       <b>File before ${c.file_before || "—"}</b> (3 years, §45(6)).</p>
+    <h2>Letter</h2>
+    <div class="letter">${c.letter}</div>
+    <p><span class="badge">✔ Every ₹ figure checked by code${c.letter_by === "template" ? " (standard template)" : ""}</span>
+       <span class="badge">${c.chain.ok ? "✔ All " + c.chain.count + " seals intact" : "✖ Record altered"}</span></p>
+    <h2>Day-by-day record</h2>
+    <table><tr><th>Date</th><th>Time</th><th class="n">Hours</th><th class="n">Due</th><th class="n">Paid</th><th class="n">Short</th><th>Seal</th></tr>${rows}</table>
+    <div class="foot">
+      <img src="data:image/png;base64,${c.qr_png}" width="120" height="120" alt="Verify QR">
+      <div><p class="hash">Latest seal (SHA-256): ${c.head}</p>
+        <p class="muted">Scan to verify on the Hisaab device: ${c.verify_url}</p>
+        <p class="muted">Free legal aid: NALSA helpline <b>15100</b>.</p></div>
+    </div>`;
+}).catch(() => document.getElementById("doc").innerHTML = "<p>Could not build the claim. Are there any entries?</p>");
+</script>
+</body>
+</html>
