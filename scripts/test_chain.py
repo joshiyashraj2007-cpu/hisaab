@@ -1,3 +1,4 @@
+"""Step 1 check: python -m scripts.test_chain"""
 import os
 os.environ["HISAAB_DB"] = "test_chain.db"
 if os.path.exists("test_chain.db"):
